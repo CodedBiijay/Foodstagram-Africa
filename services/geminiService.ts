@@ -11,18 +11,18 @@ const recipeSchemaStructure = {
     dishName: { type: Type.STRING, description: "The name of the identified African or Caribbean dish." },
     origin: { type: Type.STRING, description: "Country or region of origin (e.g., 'Senegal', 'Jamaica', 'Nigeria')." },
     description: { type: Type.STRING, description: "A sophisticated, appetizing description of the dish, highlighting its cultural significance and flavor notes." },
-    ingredients: { 
-      type: Type.ARRAY, 
-      items: { type: Type.STRING }, 
-      description: "List of ingredients with precise quantities." 
+    ingredients: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "List of ingredients with precise quantities."
     },
-    instructions: { 
-      type: Type.ARRAY, 
-      items: { type: Type.STRING }, 
-      description: "Professional, step-by-step cooking instructions." 
+    instructions: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "Professional, step-by-step cooking instructions."
     },
     specialIngredients: {
-      type: Type.ARRAY, 
+      type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
         properties: {
@@ -59,11 +59,11 @@ const cleanAndParseJSON = (text: string): RecipeData => {
     // Locate the first { and last } to handle potential intro/outro text
     const firstBrace = cleanText.indexOf('{');
     const lastBrace = cleanText.lastIndexOf('}');
-    
+
     if (firstBrace !== -1 && lastBrace !== -1) {
       cleanText = cleanText.substring(firstBrace, lastBrace + 1);
     }
-    
+
     return JSON.parse(cleanText) as RecipeData;
   } catch (e) {
     console.error("JSON Parse Error:", e);
@@ -74,27 +74,27 @@ const cleanAndParseJSON = (text: string): RecipeData => {
 // Helper to map raw errors to user-friendly messages
 const mapGeminiError = (error: any, context: string): Error => {
   let msg = "";
-  
+
   if (error instanceof Error) {
     msg = error.message;
   } else if (typeof error === 'object' && error !== null) {
-      if (error.error && error.error.message) {
-          msg = error.error.message;
-      } else if (error.message) {
-          msg = error.message;
-      } else {
-          try {
-            msg = JSON.stringify(error);
-          } catch (e) {
-            msg = String(error);
-          }
+    if (error.error && error.error.message) {
+      msg = error.error.message;
+    } else if (error.message) {
+      msg = error.message;
+    } else {
+      try {
+        msg = JSON.stringify(error);
+      } catch (e) {
+        msg = String(error);
       }
+    }
   } else {
     msg = String(error);
   }
-  
+
   const lowerMsg = msg.toLowerCase();
-  
+
   if (lowerMsg.includes("429") || lowerMsg.includes("quota")) {
     return new Error(`Our kitchen is currently at capacity. Please allow a moment before trying again.`);
   }
@@ -111,7 +111,7 @@ const mapGeminiError = (error: any, context: string): Error => {
     return new Error(`We were unable to structure the recipe data correctly. Please try a different query.`);
   }
   if (lowerMsg.includes("candidate")) {
-     return new Error(`The content could not be generated due to policy restrictions.`);
+    return new Error(`The content could not be generated due to policy restrictions.`);
   }
   if (lowerMsg.includes("entity was not found") || lowerMsg.includes("not_found")) {
     return new Error("The requested resource was not found. If this is about the API Key, please try selecting it again.");
@@ -120,7 +120,7 @@ const mapGeminiError = (error: any, context: string): Error => {
   if (msg.includes("I couldn't access the details")) {
     return new Error(msg);
   }
-  
+
   return new Error(`An error occurred while ${context === 'image' ? 'analyzing the image' : 'processing your request'}. Please try again.`);
 };
 
@@ -133,7 +133,7 @@ const safetySettings = [
 ];
 
 export const generateRecipe = async (input: { type: 'image' | 'text' | 'random', value: string }): Promise<RecipeData> => {
-  const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const currentAi = new GoogleGenAI({});
   const model = "gemini-2.5-flash";
 
   try {
@@ -151,7 +151,7 @@ export const generateRecipe = async (input: { type: 'image' | 'text' | 'random',
       - Avoid calling the user "child" or using overly distinct "storyteller" tropes unless relevant to the dish's history.
       - Focus on flavor profiles, technique, and regional accuracy.
       - When explaining ingredients, assume the user is intelligent but may need sourcing tips for the diaspora (US/UK/Canada).`,
-      
+
       safetySettings: safetySettings,
     };
 
@@ -174,8 +174,8 @@ export const generateRecipe = async (input: { type: 'image' | 'text' | 'random',
         Do not include markdown formatting like \`\`\`json.`
       });
     } else if (input.type === 'random') {
-       parts.push({
-          text: `You are the Head Chef. The user is asking: "I'm feeling hungry, surprise me!".
+      parts.push({
+        text: `You are the Head Chef. The user is asking: "I'm feeling hungry, surprise me!".
           
           Task:
           1. Select a popular, authentic African or Caribbean dish (e.g. Jerk Chicken, Jollof Rice, Bunny Chow, Oxtail Stew, Egusi, Ackee & Saltfish, Pepper Soup, etc.). 
@@ -192,7 +192,7 @@ export const generateRecipe = async (input: { type: 'image' | 'text' | 'random',
     } else {
       // Text or URL input - Enable Search Tool
       config.tools = [{ googleSearch: {} }];
-      
+
       // Basic URL detection
       const isUrl = /^(http|https):\/\/[^ "]+$/.test(input.value);
 
@@ -230,7 +230,7 @@ export const generateRecipe = async (input: { type: 'image' | 'text' | 'random',
           `
         });
       } else {
-         parts.push({
+        parts.push({
           text: `The user provided this text query: "${input.value}".
           
           Task:
@@ -256,7 +256,7 @@ export const generateRecipe = async (input: { type: 'image' | 'text' | 'random',
     if (!text) throw new Error("No response from AI");
 
     const result = cleanAndParseJSON(text);
-    
+
     // Handle the explicit error state from the URL prompt
     if (result.dishName === "LINK_ACCESS_ERROR") {
       throw new Error("I couldn't access the details of that link. It might be private or not indexed yet. Please try describing the dish or uploading a photo!");
@@ -271,7 +271,7 @@ export const generateRecipe = async (input: { type: 'image' | 'text' | 'random',
 };
 
 export const generateCookingVideo = async (dishName: string, origin: string): Promise<string> => {
-  const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const currentAi = new GoogleGenAI({});
   const model = "veo-3.1-fast-generate-preview";
 
   try {
