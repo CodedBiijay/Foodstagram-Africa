@@ -24,18 +24,39 @@ const TestimonialsSection: React.FC = () => {
     ];
 
     return (
-        <section className="py-16 px-4 bg-africa-sand/20">
+        <section className="py-12 md:py-16 px-4 bg-africa-sand/20">
             <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-serif font-bold text-africa-earth mb-4">
+                <div className="text-center mb-8 md:mb-12">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-africa-earth mb-3 md:mb-4">
                         Loved by Foodies
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                         Join thousands of users preserving our culinary history.
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6">
+                {/* Mobile: Horizontal Scroll, Desktop: Grid */}
+                <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
+                    <div className="flex gap-4 pb-4">
+                        {testimonials.map((t, i) => (
+                            <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-w-[280px] flex-shrink-0">
+                                <div className="flex text-africa-gold mb-3">
+                                    {[...Array(t.rating)].map((_, i) => (
+                                        <Star key={i} size={14} fill="currentColor" />
+                                    ))}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-4 italic">"{t.content}"</p>
+                                <div>
+                                    <p className="text-sm font-bold text-africa-earth">{t.name}</p>
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider">{t.role}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Desktop: Grid */}
+                <div className="hidden md:grid md:grid-cols-3 gap-6">
                     {testimonials.map((t, i) => (
                         <div key={i} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                             <div className="flex text-africa-gold mb-4">
