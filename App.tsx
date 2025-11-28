@@ -18,6 +18,7 @@ import {
   saveToHistoryDB,
   getHistoryFromDB
 } from './services/storageService';
+import { rateLimiter } from './services/rateLimiter';
 import { getCurrentUser, logoutUser } from './services/authService';
 
 const App: React.FC = () => {
@@ -92,6 +93,17 @@ const App: React.FC = () => {
   const handleInputSubmit = async (type: 'image' | 'text' | 'random', value: string, preview?: string) => {
     if (isOffline) {
       setError("You are currently offline. Please connect to the internet to analyze new dishes.");
+      setAppState(AppState.ERROR);
+      return;
+    }
+
+    // Rate limiting check
+    const userId = currentUser?.id || 'guest';
+    const { allowed, remaining, resetIn } = rateLimiter.checkLimit(userId);
+
+    if (!allowed) {
+      const minutes = Math.ceil(resetIn / 60000);
+      setError(`Slow down, Chef! You've reached the limit. Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before trying again.`);
       setAppState(AppState.ERROR);
       return;
     }
