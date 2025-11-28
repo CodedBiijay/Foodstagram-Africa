@@ -380,27 +380,27 @@ const App: React.FC = () => {
           {/* Lead Magnet Trigger */}
           <button
             onClick={() => setIsSpiceGuideOpen(true)}
-            className="hidden md:flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold text-africa-accent hover:bg-orange-50 transition-all"
+            className="hidden md:flex items-center space-x-2 px-4 py-2.5 min-h-[44px] rounded-full text-sm font-bold text-africa-accent hover:bg-orange-50 transition-all"
           >
-            <Gift size={16} />
+            <Gift size={18} />
             <span>Ultimate Spice Guide</span>
           </button>
 
           <button
             onClick={handleOpenCookbook}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-full font-bold transition-all ${appState === AppState.SAVED_LIST
+            className={`flex items-center justify-center space-x-2 px-4 sm:px-5 py-2.5 min-h-[44px] min-w-[44px] rounded-full font-bold transition-all ${appState === AppState.SAVED_LIST
               ? 'bg-africa-earth text-white shadow-lg'
               : 'bg-white text-africa-earth shadow-sm hover:shadow-md hover:bg-orange-50'
               }`}
           >
-            <BookOpen size={18} />
+            <BookOpen size={20} />
             <span className="hidden sm:inline">My Collection {currentUser ? `(${savedRecipes.length})` : ''}</span>
           </button>
 
           {currentUser ? (
             <div className="relative group">
-              <button className="flex items-center space-x-2 px-3 py-2.5 rounded-full bg-white text-africa-accent border border-africa-accent/20 hover:bg-orange-50 transition-all">
-                <UserIcon size={18} />
+              <button className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] min-w-[44px] rounded-full bg-white text-africa-accent border border-africa-accent/20 hover:bg-orange-50 transition-all">
+                <UserIcon size={20} />
                 <span className="hidden sm:inline text-sm font-bold">{currentUser.name.split(' ')[0]}</span>
               </button>
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden transform scale-95 opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all z-50 origin-top-right">
@@ -410,19 +410,19 @@ const App: React.FC = () => {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center"
+                  className="w-full text-left px-4 py-3 min-h-[44px] text-sm text-red-500 hover:bg-red-50 flex items-center"
                 >
-                  <LogOut size={14} className="mr-2" /> Sign Out
+                  <LogOut size={16} className="mr-2" /> Sign Out
                 </button>
               </div>
             </div>
           ) : (
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="flex items-center space-x-2 px-5 py-2.5 rounded-full font-bold bg-africa-accent text-white shadow-md hover:bg-orange-600 transition-all"
+              className="flex items-center justify-center space-x-2 px-4 sm:px-5 py-2.5 min-h-[44px] min-w-[44px] rounded-full font-bold bg-africa-accent text-white shadow-md hover:bg-orange-600 transition-all"
             >
-              <UserIcon size={18} />
-              <span>Sign In</span>
+              <UserIcon size={20} />
+              <span className="hidden sm:inline">Sign In</span>
             </button>
           )}
         </div>
@@ -432,7 +432,7 @@ const App: React.FC = () => {
         {appState === AppState.IDLE && (
           <div className="w-full">
             {/* Hero Section with Background Image */}
-            <div className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+            <div className="relative min-h-[70vh] md:min-h-[85vh] flex items-center justify-center overflow-hidden">
               {/* Background Image */}
               <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -446,39 +446,41 @@ const App: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-africa-earth/80"></div>
 
               {/* Content */}
-              <div className="relative z-10 max-w-6xl mx-auto px-4 py-20 text-center space-y-12 animate-fade-in-up">
-                <div className="space-y-8">
-                  <h2 className="text-6xl md:text-8xl font-serif font-bold text-white leading-tight drop-shadow-2xl">
+              <div className="relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20 text-center space-y-8 md:space-y-12 animate-fade-in-up">
+                <div className="space-y-4 md:space-y-8">
+                  <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-serif font-bold text-white leading-tight drop-shadow-2xl">
                     Master Authentic <br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-africa-gold via-africa-accent to-africa-clay animate-gradient">
                       African & Caribbean Cuisine
                     </span>
                   </h2>
-                  <p className="text-xl md:text-3xl text-white/90 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-lg">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-3xl text-white/90 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-lg">
                     Instantly turn any food photo into a complete recipe. Discover the history, ingredients, and cooking techniques of the continent's best dishes.
                   </p>
                 </div>
 
                 {/* Glassmorphism Input Container */}
                 <div className={`max-w-3xl mx-auto ${isOffline ? 'opacity-50 pointer-events-none' : ''}`}>
-                  <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+                  <div className="bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-8 border border-white/20 shadow-2xl">
                     <RecipeInput onInputSubmit={handleInputSubmit} />
                   </div>
                 </div>
 
-                {/* Trust Indicators */}
-                <div className="flex flex-wrap items-center justify-center gap-8 text-white/80 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span>AI-Powered Analysis</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span>Authentic Recipes</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span>Cultural Heritage</span>
+                {/* Trust Indicators - Horizontal scroll on mobile */}
+                <div className="overflow-x-auto scrollbar-hide">
+                  <div className="flex items-center justify-start md:justify-center gap-6 md:gap-8 text-white/80 text-xs md:text-sm min-w-max px-4 md:px-0">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span>AI-Powered Analysis</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span>Authentic Recipes</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span>Cultural Heritage</span>
+                    </div>
                   </div>
                 </div>
               </div>
