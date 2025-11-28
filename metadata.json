@@ -1,0 +1,7 @@
+{
+  "name": "Foodstagram Africa",
+  "description": "An AI-powered culinary assistant helping you identify, cook, and learn about authentic African cuisine from your photos.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
