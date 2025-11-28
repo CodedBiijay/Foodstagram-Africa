@@ -29,6 +29,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
         user = await loginUser(email);
       } else {
         if (!name.trim()) throw new Error("Name is required");
+
+        // Formspree Integration
+        try {
+          await fetch("https://formspree.io/f/mjkqonnr", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              email: email,
+              name: name,
+              message: "New User Signup from Foodstagram Africa"
+            })
+          });
+        } catch (formError) {
+          console.error("Formspree submission failed", formError);
+          // We continue even if Formspree fails, to allow the user to use the app
+        }
+
         user = await registerUser(name, email);
       }
       onSuccess(user);
@@ -42,7 +61,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-africa-earth/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       ></div>
@@ -51,7 +70,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
         {/* Header Image/Color */}
         <div className="h-32 bg-gradient-to-r from-africa-clay to-africa-accent relative p-6 flex justify-end flex-col">
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-4 right-4 text-white/80 hover:text-white transition"
           >
@@ -68,7 +87,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
         <div className="p-8">
           {error && (
             <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-semibold flex items-center">
-               <span className="mr-2">⚠️</span> {error}
+              <span className="mr-2">⚠️</span> {error}
             </div>
           )}
 
@@ -122,7 +141,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
               {isLogin ? "New to Foodstagram?" : "Already have an account?"}
-              <button 
+              <button
                 onClick={() => { setIsLogin(!isLogin); setError(null); }}
                 className="ml-2 font-bold text-africa-accent hover:underline"
               >

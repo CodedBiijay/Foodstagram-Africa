@@ -1,53 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Foodstagram Africa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              serif: ['"Playfair Display"', 'serif'],
-              sans: ['Lato', 'sans-serif'],
-            },
-            colors: {
-              africa: {
-                clay: '#C1666B',
-                gold: '#D4B483',
-                earth: '#4E4B42',
-                sand: '#E4DFDA',
-                green: '#48A9A6',
-                accent: '#D95D39'
-              }
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foodstagram Africa - Master Authentic African Cuisine</title>
+  <meta name="description"
+    content="Instantly turn any food photo into a complete recipe. Discover the history, ingredients, and cooking techniques of the continent's best dishes." />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://foodstagram-africa.com/" />
+  <meta property="og:title" content="Foodstagram Africa - Master Authentic African Cuisine" />
+  <meta property="og:description"
+    content="Instantly turn any food photo into a complete recipe. Discover the history, ingredients, and cooking techniques of the continent's best dishes." />
+  <meta property="og:image" content="https://foodstagram-africa.com/og-image.jpg" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://foodstagram-africa.com/" />
+  <meta property="twitter:title" content="Foodstagram Africa - Master Authentic African Cuisine" />
+  <meta property="twitter:description"
+    content="Instantly turn any food photo into a complete recipe. Discover the history, ingredients, and cooking techniques of the continent's best dishes." />
+  <meta property="twitter:image" content="https://foodstagram-africa.com/og-image.jpg" />
+
+  <link rel="canonical" href="https://foodstagram-africa.com/" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['Lato', 'sans-serif'],
+          },
+          colors: {
+            africa: {
+              clay: '#C1666B',
+              gold: '#D4B483',
+              earth: '#4E4B42',
+              sand: '#E4DFDA',
+              green: '#48A9A6',
+              accent: '#D95D39'
             }
           }
         }
       }
-    </script>
-    <style>
-      body {
-        background-color: #FDFBF7;
-        color: #4E4B42;
-      }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.0"
-  }
-}
-</script>
+    }
+  </script>
+  <style>
+    body {
+      background-color: #FDFBF7;
+      color: #4E4B42;
+    }
+  </style>
+
 </head>
-  <body>
-    <div id="root"></div>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

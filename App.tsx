@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { ChefHat, Heart, MessageSquare, BookOpen, Key, WifiOff, Sparkles, User as UserIcon, LogOut } from 'lucide-react';
+import { ChefHat, Heart, MessageSquare, BookOpen, Key, WifiOff, Sparkles, User as UserIcon, LogOut, Gift } from 'lucide-react';
 import RecipeInput from './components/ImageUpload';
 import RecipeDisplay from './components/RecipeDisplay';
 import SavedRecipesList from './components/SavedRecipesList';
 import LoadingOverlay from './components/LoadingOverlay';
 import AuthModal from './components/AuthModal';
+import FeaturesSection from './components/FeaturesSection';
+import TestimonialsSection from './components/TestimonialsSection';
+import SpiceGuideModal from './components/SpiceGuideModal';
 import { generateRecipe, generateCookingVideo } from './services/geminiService';
 import { AppState, RecipeData, User } from './types';
-import { 
-  saveRecipeToDB, 
-  getSavedRecipesFromDB, 
-  deleteRecipeFromDB, 
-  migrateFromLocalStorage 
+import {
+  saveRecipeToDB,
+  getSavedRecipesFromDB,
+  deleteRecipeFromDB,
+  migrateFromLocalStorage,
+  saveToHistoryDB,
+  getHistoryFromDB
 } from './services/storageService';
 import { getCurrentUser, logoutUser } from './services/authService';
 
@@ -22,13 +27,17 @@ const App: React.FC = () => {
   const [userQuery, setUserQuery] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedRecipes, setSavedRecipes] = useState<RecipeData[]>([]);
+  const [historyRecipes, setHistoryRecipes] = useState<RecipeData[]>([]);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  
+
   // Auth State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Lead Magnet State
+  const [isSpiceGuideOpen, setIsSpiceGuideOpen] = useState(false);
 
   // Network status listeners
   useEffect(() => {
@@ -52,11 +61,13 @@ const App: React.FC = () => {
       setCurrentUser(user);
 
       await migrateFromLocalStorage();
-      
+
       if (user) {
         // Load user specific recipes
         const recipes = await getSavedRecipesFromDB(user.id);
+        const history = await getHistoryFromDB(user.id);
         setSavedRecipes(recipes);
+        setHistoryRecipes(history);
       }
     };
     initData();
@@ -67,9 +78,12 @@ const App: React.FC = () => {
     const loadRecipes = async () => {
       if (currentUser) {
         const recipes = await getSavedRecipesFromDB(currentUser.id);
+        const history = await getHistoryFromDB(currentUser.id);
         setSavedRecipes(recipes);
+        setHistoryRecipes(history);
       } else {
         setSavedRecipes([]);
+        setHistoryRecipes([]);
       }
     };
     loadRecipes();
@@ -104,6 +118,13 @@ const App: React.FC = () => {
       const dataWithId = { ...data, id: Date.now().toString() };
       setRecipeData(dataWithId);
       setAppState(AppState.RESULT);
+
+      // Auto-save to History if user is logged in
+      if (currentUser) {
+        await saveToHistoryDB(dataWithId, currentUser.id);
+        const history = await getHistoryFromDB(currentUser.id);
+        setHistoryRecipes(history);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || "We were unable to process your request at this time. Please try again.");
@@ -112,8 +133,8 @@ const App: React.FC = () => {
   };
 
   const handleExploreRelated = async (dishName: string) => {
-     // Re-use input submit logic but with the new dish name text
-     await handleInputSubmit('text', `Recipe for ${dishName}`);
+    // Re-use input submit logic but with the new dish name text
+    await handleInputSubmit('text', `Recipe for ${dishName}`);
   };
 
   const handleGenerateVideo = async () => {
@@ -145,7 +166,7 @@ const App: React.FC = () => {
       const uri = await generateCookingVideo(recipeData.dishName, recipeData.origin);
       const updatedRecipe = { ...recipeData, videoUri: uri };
       setRecipeData(updatedRecipe);
-      
+
       // Update in DB if saved and user logged in
       if (currentUser && savedRecipes.some(r => r.dishName === updatedRecipe.dishName)) {
         await saveRecipeToDB(updatedRecipe, currentUser.id);
@@ -155,23 +176,23 @@ const App: React.FC = () => {
     } catch (e: any) {
       console.error("Video generation failed", e);
       const errorMessage = e.message || "Failed to generate video. Please try again.";
-      
+
       // Check specifically for the Entity Not Found error to trigger retry
       if (errorMessage.includes("resource was not found") || errorMessage.includes("entity was not found")) {
-         if (window.aistudio && window.aistudio.openSelectKey) {
-             setVideoError("Refreshing authentication...");
-             try {
-                // Explicitly prompt user to select key again as per guidelines
-                await window.aistudio.openSelectKey();
-                setVideoError("Authentication refreshed. Please click 'Generate Chef's Reel' again.");
-             } catch (keyErr) {
-                setVideoError("Authentication failed. Video generation requires a paid API key.");
-             }
-         } else {
-             setVideoError(errorMessage);
-         }
+        if (window.aistudio && window.aistudio.openSelectKey) {
+          setVideoError("Refreshing authentication...");
+          try {
+            // Explicitly prompt user to select key again as per guidelines
+            await window.aistudio.openSelectKey();
+            setVideoError("Authentication refreshed. Please click 'Generate Chef's Reel' again.");
+          } catch (keyErr) {
+            setVideoError("Authentication failed. Video generation requires a paid API key.");
+          }
+        } else {
+          setVideoError(errorMessage);
+        }
       } else {
-         setVideoError(errorMessage);
+        setVideoError(errorMessage);
       }
     } finally {
       setIsGeneratingVideo(false);
@@ -195,7 +216,7 @@ const App: React.FC = () => {
     }
 
     const existing = savedRecipes.find(r => r.dishName === recipe.dishName);
-    
+
     try {
       if (existing && existing.id) {
         // Remove
@@ -250,11 +271,20 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveHistoryItem = async (recipe: RecipeData) => {
+    if (!currentUser) return;
+    // Add - Ensure it has an ID
+    const newRecipe = { ...recipe, id: recipe.id || Date.now().toString() };
+    await saveRecipeToDB(newRecipe, currentUser.id);
+    const refreshedList = await getSavedRecipesFromDB(currentUser.id);
+    setSavedRecipes(refreshedList);
+  };
+
   const handleViewSaved = (recipe: RecipeData) => {
     setRecipeData(recipe);
     // When viewing from saved list, we don't usually have the original image context
     setImagePreview(null);
-    setUserQuery(null); 
+    setUserQuery(null);
     setVideoError(null);
     setAppState(AppState.RESULT);
   };
@@ -279,6 +309,11 @@ const App: React.FC = () => {
     setAppState(AppState.SAVED_LIST);
   };
 
+  const handleUnlockGuide = () => {
+    setIsSpiceGuideOpen(false);
+    setIsAuthModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen font-sans text-africa-earth flex flex-col relative overflow-hidden bg-[#FDFBF7]">
       {/* Background decoration */}
@@ -290,8 +325,8 @@ const App: React.FC = () => {
 
       {/* Auth Modal */}
       {isAuthModalOpen && (
-        <AuthModal 
-          isOpen={isAuthModalOpen} 
+        <AuthModal
+          isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
           onSuccess={(user) => {
             setCurrentUser(user);
@@ -299,6 +334,14 @@ const App: React.FC = () => {
           }}
         />
       )}
+
+      {/* Spice Guide Modal */}
+      <SpiceGuideModal
+        isOpen={isSpiceGuideOpen}
+        onClose={() => setIsSpiceGuideOpen(false)}
+        isUnlocked={!!currentUser}
+        onUnlock={handleUnlockGuide}
+      />
 
       {/* Offline Banner */}
       {isOffline && (
@@ -322,13 +365,21 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <button 
+          {/* Lead Magnet Trigger */}
+          <button
+            onClick={() => setIsSpiceGuideOpen(true)}
+            className="hidden md:flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold text-africa-accent hover:bg-orange-50 transition-all"
+          >
+            <Gift size={16} />
+            <span>Ultimate Spice Guide</span>
+          </button>
+
+          <button
             onClick={handleOpenCookbook}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-full font-bold transition-all ${
-              appState === AppState.SAVED_LIST 
-                ? 'bg-africa-earth text-white shadow-lg' 
+            className={`flex items-center space-x-2 px-5 py-2.5 rounded-full font-bold transition-all ${appState === AppState.SAVED_LIST
+                ? 'bg-africa-earth text-white shadow-lg'
                 : 'bg-white text-africa-earth shadow-sm hover:shadow-md hover:bg-orange-50'
-            }`}
+              }`}
           >
             <BookOpen size={18} />
             <span className="hidden sm:inline">My Collection {currentUser ? `(${savedRecipes.length})` : ''}</span>
@@ -345,7 +396,7 @@ const App: React.FC = () => {
                   <p className="text-sm font-bold text-gray-800">{currentUser.name}</p>
                   <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
                 </div>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center"
                 >
@@ -354,7 +405,7 @@ const App: React.FC = () => {
               </div>
             </div>
           ) : (
-            <button 
+            <button
               onClick={() => setIsAuthModalOpen(true)}
               className="flex items-center space-x-2 px-5 py-2.5 rounded-full font-bold bg-africa-accent text-white shadow-md hover:bg-orange-600 transition-all"
             >
@@ -367,40 +418,50 @@ const App: React.FC = () => {
 
       <main className="flex-grow flex flex-col items-center justify-center p-4 w-full">
         {appState === AppState.IDLE && (
-          <div className="w-full max-w-4xl mx-auto text-center space-y-12 animate-fade-in-up">
-            <div className="space-y-6">
-              <h2 className="text-5xl md:text-7xl font-serif font-bold text-africa-earth leading-tight">
-                Elevate Your <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-africa-accent to-africa-clay">
-                  Culinary Heritage
-                </span>
-              </h2>
-              <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                Expert AI analysis for authentic African and Caribbean cuisine. 
-                Upload a photo, share a reel, or ask the Chef for precise regional recipes.
-              </p>
+          <div className="w-full">
+            <div className="max-w-4xl mx-auto text-center space-y-12 animate-fade-in-up mb-20">
+              <div className="space-y-6">
+                <h2 className="text-5xl md:text-7xl font-serif font-bold text-africa-earth leading-tight">
+                  Master Authentic <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-africa-accent to-africa-clay">
+                    African & Caribbean Cuisine
+                  </span>
+                </h2>
+                <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                  Instantly turn any food photo into a complete recipe. Discover the history, ingredients, and cooking techniques of the continent's best dishes.
+                </p>
+              </div>
+
+              <div className={isOffline ? 'opacity-50 pointer-events-none' : ''}>
+                <RecipeInput onInputSubmit={handleInputSubmit} />
+              </div>
             </div>
-            
-            <div className={isOffline ? 'opacity-50 pointer-events-none' : ''}>
-              <RecipeInput onInputSubmit={handleInputSubmit} />
-            </div>
-            
-            <div className="flex justify-center space-x-8 text-gray-400 grayscale opacity-60">
-              {/* Decorative placeholders for trust badges/partners */}
-              <div className="h-2 w-24 bg-gray-200 rounded-full"></div>
-              <div className="h-2 w-24 bg-gray-200 rounded-full"></div>
-              <div className="h-2 w-24 bg-gray-200 rounded-full"></div>
+
+            {/* New Sections */}
+            <FeaturesSection />
+            <TestimonialsSection />
+
+            {/* Lead Magnet Teaser at bottom */}
+            <div className="py-12 text-center">
+              <button
+                onClick={() => setIsSpiceGuideOpen(true)}
+                className="text-africa-accent font-bold hover:underline"
+              >
+                Get your free Ultimate Spice Guide
+              </button>
             </div>
           </div>
         )}
 
         {appState === AppState.SAVED_LIST && (
-           <SavedRecipesList 
-              recipes={savedRecipes}
-              onSelectRecipe={handleViewSaved}
-              onDeleteRecipe={handleDeleteSaved}
-              onBack={handleReset}
-           />
+          <SavedRecipesList
+            recipes={savedRecipes}
+            history={historyRecipes}
+            onSelectRecipe={handleViewSaved}
+            onDeleteRecipe={handleDeleteSaved}
+            onSaveHistoryItem={handleSaveHistoryItem}
+            onBack={handleReset}
+          />
         )}
 
         {appState === AppState.RESULT && recipeData && (
@@ -408,9 +469,9 @@ const App: React.FC = () => {
             {/* Context Header shown only if we have a context (image or query) */}
             <div className="max-w-4xl mx-auto mb-6 flex items-center space-x-4 px-4">
               {imagePreview ? (
-                <img 
-                  src={imagePreview} 
-                  alt="Uploaded Dish" 
+                <img
+                  src={imagePreview}
+                  alt="Uploaded Dish"
                   className="w-24 h-24 object-cover rounded-xl shadow-md border-2 border-white"
                 />
               ) : (
@@ -430,8 +491,8 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <RecipeDisplay 
-              data={recipeData} 
+            <RecipeDisplay
+              data={recipeData}
               onReset={handleReset}
               onSave={toggleSaveRecipe}
               onUpdate={handleUpdateRecipe}
@@ -446,17 +507,17 @@ const App: React.FC = () => {
 
         {appState === AppState.ERROR && (
           <div className="text-center max-w-md mx-auto p-8 bg-red-50 rounded-3xl border border-red-100 animate-fade-in">
-             <div className="text-red-500 mb-4 flex justify-center">
-               <ChefHat size={48} className="transform rotate-12"/>
-             </div>
-             <h3 className="text-xl font-bold text-red-800 mb-2">Service Interruption</h3>
-             <p className="text-red-600 mb-6">{error}</p>
-             <button 
-                onClick={handleReset}
-                className="px-6 py-2 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition"
-              >
-                Try Again
-              </button>
+            <div className="text-red-500 mb-4 flex justify-center">
+              <ChefHat size={48} className="transform rotate-12" />
+            </div>
+            <h3 className="text-xl font-bold text-red-800 mb-2">Service Interruption</h3>
+            <p className="text-red-600 mb-6">{error}</p>
+            <button
+              onClick={handleReset}
+              className="px-6 py-2 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition"
+            >
+              Try Again
+            </button>
           </div>
         )}
       </main>
@@ -466,7 +527,7 @@ const App: React.FC = () => {
           Made with <Heart size={14} className="text-africa-accent fill-current" /> for African Cuisine
         </p>
         {!isOffline && (
-          <button 
+          <button
             onClick={handleUpdateKey}
             className="flex items-center text-xs opacity-50 hover:opacity-100 hover:text-africa-earth transition"
           >
