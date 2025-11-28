@@ -377,8 +377,8 @@ const App: React.FC = () => {
           <button
             onClick={handleOpenCookbook}
             className={`flex items-center space-x-2 px-5 py-2.5 rounded-full font-bold transition-all ${appState === AppState.SAVED_LIST
-                ? 'bg-africa-earth text-white shadow-lg'
-                : 'bg-white text-africa-earth shadow-sm hover:shadow-md hover:bg-orange-50'
+              ? 'bg-africa-earth text-white shadow-lg'
+              : 'bg-white text-africa-earth shadow-sm hover:shadow-md hover:bg-orange-50'
               }`}
           >
             <BookOpen size={18} />
@@ -416,24 +416,59 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center p-4 w-full">
+      <main className="flex-grow flex flex-col items-center justify-center w-full">
         {appState === AppState.IDLE && (
           <div className="w-full">
-            <div className="max-w-4xl mx-auto text-center space-y-12 animate-fade-in-up mb-20">
-              <div className="space-y-6">
-                <h2 className="text-5xl md:text-7xl font-serif font-bold text-africa-earth leading-tight">
-                  Master Authentic <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-africa-accent to-africa-clay">
-                    African & Caribbean Cuisine
-                  </span>
-                </h2>
-                <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                  Instantly turn any food photo into a complete recipe. Discover the history, ingredients, and cooking techniques of the continent's best dishes.
-                </p>
-              </div>
+            {/* Hero Section with Background Image */}
+            <div className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+              {/* Background Image */}
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: 'url(/hero-bg.png)',
+                  filter: 'brightness(0.7)'
+                }}
+              ></div>
 
-              <div className={isOffline ? 'opacity-50 pointer-events-none' : ''}>
-                <RecipeInput onInputSubmit={handleInputSubmit} />
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-africa-earth/80"></div>
+
+              {/* Content */}
+              <div className="relative z-10 max-w-6xl mx-auto px-4 py-20 text-center space-y-12 animate-fade-in-up">
+                <div className="space-y-8">
+                  <h2 className="text-6xl md:text-8xl font-serif font-bold text-white leading-tight drop-shadow-2xl">
+                    Master Authentic <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-africa-gold via-africa-accent to-africa-clay animate-gradient">
+                      African & Caribbean Cuisine
+                    </span>
+                  </h2>
+                  <p className="text-xl md:text-3xl text-white/90 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-lg">
+                    Instantly turn any food photo into a complete recipe. Discover the history, ingredients, and cooking techniques of the continent's best dishes.
+                  </p>
+                </div>
+
+                {/* Glassmorphism Input Container */}
+                <div className={`max-w-3xl mx-auto ${isOffline ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+                    <RecipeInput onInputSubmit={handleInputSubmit} />
+                  </div>
+                </div>
+
+                {/* Trust Indicators */}
+                <div className="flex flex-wrap items-center justify-center gap-8 text-white/80 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>AI-Powered Analysis</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>Authentic Recipes</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>Cultural Heritage</span>
+                  </div>
+                </div>
               </div>
             </div>
 
