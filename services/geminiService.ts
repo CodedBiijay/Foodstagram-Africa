@@ -133,7 +133,9 @@ const safetySettings = [
 ];
 
 export const generateRecipe = async (input: { type: 'image' | 'text' | 'random', value: string }): Promise<RecipeData> => {
-  const currentAi = new GoogleGenAI({});
+  // Use environment variable if available (production), otherwise rely on AI Studio (development)
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const currentAi = apiKey ? new GoogleGenAI({ apiKey }) : new GoogleGenAI({});
   const model = "gemini-2.5-flash";
 
   try {
@@ -271,7 +273,9 @@ export const generateRecipe = async (input: { type: 'image' | 'text' | 'random',
 };
 
 export const generateCookingVideo = async (dishName: string, origin: string): Promise<string> => {
-  const currentAi = new GoogleGenAI({});
+  // Use environment variable if available (production), otherwise rely on AI Studio (development)
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const currentAi = apiKey ? new GoogleGenAI({ apiKey }) : new GoogleGenAI({});
   const model = "veo-3.1-fast-generate-preview";
 
   try {
